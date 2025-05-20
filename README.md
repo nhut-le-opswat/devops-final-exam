@@ -1,5 +1,37 @@
 # DevOps Final Exam Submission - Go Coffee Shop
 
+## Table of Contents
+1.  [Summary](#1-summary)
+2.  [Architecture](#2-architecture)
+    1.  [Development Environment Architecture](#21-development-environment-architecture)
+    2.  [Production Environment Architecture](#22-production-environment-architecture)
+    3.  [CI/CD Flow (Example: Product Service)](#23-cicd-flow-example-product-service)
+3.  [Component Description](#3-component-description)
+    1.  [AWS VPC (Virtual Private Cloud)](#31-aws-vpc-virtual-private-cloud)
+    2.  [Terraform](#32-terraform)
+    3.  [Development Environment](#33-development-environment)
+    4.  [Amazon ECR (Elastic Container Registry)](#34-amazon-ecr-elastic-container-registry)
+    5.  [Amazon RDS (Relational Database Service) & AWS Secrets Manager](#35-amazon-rds-relational-database-service--aws-secrets-manager)
+    6.  [Amazon EKS (Elastic Kubernetes Service)](#36-amazon-eks-elastic-kubernetes-service)
+    7.  [Kubernetes Manifests (YAMLs)](#37-kubernetes-manifests-yamls)
+    8.  [GitHub Actions (CI/CD)](#38-github-actions-cicd)
+    9.  [Amazon CloudWatch (Monitoring)](#39-amazon-cloudwatch-monitoring)
+    10. [Security Considerations](#310-security-considerations)
+    11. [Health Checks](#311-health-checks)
+4.  [The Homepage of the Application](#4-the-homepage-of-the-application)
+5.  [User Guideline](#5-user-guideline)
+    1.  [Prerequisites](#51-prerequisites)
+    2.  [Repository Setup](#52-repository-setup)
+    3.  [Terraform Infrastructure Provisioning](#53-terraform-infrastructure-provisioning)
+    4.  [Development Environment Deployment (EC2 + Docker Compose)](#54-development-environment-deployment-ec2--docker-compose)
+    5.  [Production Image Preparation (Push to ECR)](#55-production-image-preparation-push-to-ecr)
+    6.  [Production Application Deployment (EKS)](#56-production-application-deployment-eks)
+    7.  [CI/CD (GitHub Actions)](#57-cicd-github-actions)
+    8.  [Monitoring (CloudWatch)](#58-monitoring-cloudwatch)
+    9.  [Cleanup (VERY IMPORTANT TO AVOID COSTS)](#59-cleanup-very-important-to-avoid-costs)
+
+---
+
 ## 1. Summary
 
 This project demonstrates the deployment of the "Go Coffee Shop" multi-container application across two distinct environments: a development environment hosted on an AWS EC2 instance using Docker Compose, and a production-like environment orchestrated by Amazon EKS (Elastic Kubernetes Service).
