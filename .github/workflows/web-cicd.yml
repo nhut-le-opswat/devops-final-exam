@@ -18,7 +18,7 @@ env:
   ECR_REPOSITORY_NAME: go-coffeeshop-web # Your ECR repository name
 
   K8S_DEPLOYMENT_NAME: web-deployment # Your K8s deployment name for this service
-  K8S_CONTAINER_NAME: web-service # The name of the container in your K8s deployment
+  K8S_CONTAINER_NAME: web-app # The name of the container in your K8s deployment
 
 jobs:
   scan-push-deploy:
