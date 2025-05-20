@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-deployment
+  labels:
+    app: product
+  # namespace: coffeeshop-prod # If using a namespace
+spec:
+  replicas: 1 # Start with 1 replica for simplicity
+  selector:
+    matchLabels:
+      app: product
+  template:
+    metadata:
+      labels:
+        app: product
+    spec:
+      containers:
+        - name: product-service
+          image: 906314669216.dkr.ecr.us-east-1.amazonaws.com/go-coffeeshop-product:latest # Your ECR image
+          ports:
+            - containerPort: 5001 # As per exam doc: product service port
+              name: grpc
+          env:
+            - name: APP_NAME
+              value: "ProductService-Prod-K8s"
+          # Add other env vars if this service needs them (e.g., DB, RabbitMQ - though product doesn't seem to)
+
+          # Basic Liveness and Readiness Probes (TCP check on the gRPC port)
+          # Adjust initialDelaySeconds as needed, especially for first image pull / startup
+          livenessProbe:
+            tcpSocket:
+              port: grpc # References the containerPort name 'grpc' (port 5001)
+            initialDelaySeconds: 60 # Give it time to start
+            periodSeconds: 20
+            timeoutSeconds: 5 # Shorter timeout for liveness
+          readinessProbe:
+            tcpSocket:
+              port: grpc
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5 # Shorter timeout for readiness

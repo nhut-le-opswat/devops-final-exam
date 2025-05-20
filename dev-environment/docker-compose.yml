@@ -1,0 +1,133 @@
+version: '3.8'
+
+networks:
+  coffeeshop-net:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: postgres_db
+    networks:
+      - coffeeshop-net
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3.11-management-alpine
+    container_name: rabbitmq_broker
+    networks:
+      - coffeeshop-net
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  product:
+    image: cuongopswat/go-coffeeshop-product
+    container_name: product_service
+    networks:
+      - coffeeshop-net
+    environment:
+      APP_NAME: ProductService
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  counter:
+    image: cuongopswat/go-coffeeshop-counter
+    container_name: counter_service
+    networks:
+      - coffeeshop-net
+    environment:
+      APP_NAME: CounterService
+      IN_DOCKER: "true"
+      PG_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}?sslmode=disable"
+      PG_DSN_URL: "host=postgres_db user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable"
+      RABBITMQ_URL: "amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq_broker:5672/"
+      PRODUCT_CLIENT_URL: "product_service:5001"
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - rabbitmq
+      - product
+
+  barista:
+    image: cuongopswat/go-coffeeshop-barista
+    container_name: barista_service
+    networks:
+      - coffeeshop-net
+    environment:
+      APP_NAME: BaristaService
+      IN_DOCKER: "true"
+      PG_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}?sslmode=disable"
+      PG_DSN_URL: "host=postgres_db user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable"
+      RABBITMQ_URL: "amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq_broker:5672/"
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  kitchen:
+    image: cuongopswat/go-coffeeshop-kitchen
+    container_name: kitchen_service
+    networks:
+      - coffeeshop-net
+    environment:
+      APP_NAME: KitchenService
+      IN_DOCKER: "true"
+      PG_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}?sslmode=disable"
+      PG_DSN_URL: "host=postgres_db user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable"
+      RABBITMQ_URL: "amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq_broker:5672/"
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  proxy:
+    image: cuongopswat/go-coffeeshop-proxy
+    container_name: proxy_service
+    networks:
+      - coffeeshop-net
+    environment:
+      APP_NAME: ProxyService
+      GRPC_PRODUCT_HOST: product_service
+      GRPC_PRODUCT_PORT: 5001
+      GRPC_COUNTER_HOST: counter_service
+      GRPC_COUNTER_PORT: 5002
+    restart: unless-stopped
+    depends_on:
+      - product
+      - counter
+
+  web:
+    image: cuongopswat/go-coffeeshop-web
+    container_name: web_app
+    networks:
+      - coffeeshop-net
+    ports:
+      - "80:8888"
+    environment:
+      REVERSE_PROXY_URL: "proxy_service:5000"
+      WEB_PORT: 8888
+    restart: unless-stopped
+    depends_on:
+      - proxy
+      - barista
+      - kitchen
+
+volumes:
+  postgres_data:
+  rabbitmq_data: 

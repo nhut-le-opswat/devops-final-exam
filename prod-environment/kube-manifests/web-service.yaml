@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service # External service for the web app
+  labels:
+    app: web
+  # namespace: coffeeshop-prod
+  # Optional: Annotations for AWS Load Balancer Controller if you were using it for ALB/NLB customization.
+  # For a basic NLB (default for type: LoadBalancer on EKS with public subnets):
+  # annotations:
+  #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type:
+    LoadBalancer # This will provision an AWS Network Load Balancer (NLB)
+    # because our EKS nodes are in public subnets with ELB tags.
+  ports:
+    - name: http
+      port: 80 # Port the Load Balancer listens on (external port)
+      targetPort: http # Port on the web pods (port 8888, named 'http')
+      protocol: TCP
+  selector:
+    app: web # Selects pods with label "app: web"

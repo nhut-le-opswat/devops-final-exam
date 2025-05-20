@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: counter-deployment
+  labels:
+    app: counter
+  # namespace: coffeeshop-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: counter
+  template:
+    metadata:
+      labels:
+        app: counter
+    spec:
+      containers:
+        - name: counter-service
+          image: 906314669216.dkr.ecr.us-east-1.amazonaws.com/go-coffeeshop-counter:latest # Your ECR image
+          ports:
+            - containerPort: 5002 # Counter service port
+              name: grpc
+          env:
+            - name: APP_NAME
+              value: "CounterService-Prod-K8s"
+            - name: IN_DOCKER
+              value: "true"
+
+            # Intermediate variables from secrets (these will be plain text in the container)
+            - name: DB_USER_FROM_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: rds-db-credentials
+                  key: DB_USER
+            - name: DB_PASS_FROM_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: rds-db-credentials
+                  key: DB_PASS
+            - name: DB_NAME_FROM_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: rds-db-credentials
+                  key: DB_NAME
+            - name: RDS_ENDPOINT
+              value: "prod-postgres-db.cg7uke06uztm.us-east-1.rds.amazonaws.com" # Your RDS Endpoint
+
+            - name: RMQ_USER_FROM_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: RABBITMQ_DEFAULT_USER
+            - name: RMQ_PASS_FROM_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: RABBITMQ_DEFAULT_PASS
+
+            # Construct actual URLs needed by the application
+            - name: PG_URL
+              value: "postgres://$(DB_USER_FROM_SECRET):$(DB_PASS_FROM_SECRET)@$(RDS_ENDPOINT):5432/$(DB_NAME_FROM_SECRET)"
+            - name: PG_DSN_URL
+              value: "host=$(RDS_ENDPOINT) user=$(DB_USER_FROM_SECRET) password=$(DB_PASS_FROM_SECRET) dbname=$(DB_NAME_FROM_SECRET) sslmode=disable"
+            - name: RABBITMQ_URL
+              value: "amqp://$(RMQ_USER_FROM_SECRET):$(RMQ_PASS_FROM_SECRET)@rabbitmq-service:5672/"
+
+            - name: PRODUCT_CLIENT_URL
+              value: "product-service:5001" # K8s service name and port for Product service
+
+          livenessProbe:
+            tcpSocket:
+              port: grpc # Port 5002
+            initialDelaySeconds: 70 # Allow more time due to dependencies
+            periodSeconds: 20
+            timeoutSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: grpc
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            timeoutSeconds: 5

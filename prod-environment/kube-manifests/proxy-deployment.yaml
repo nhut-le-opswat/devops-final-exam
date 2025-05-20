@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy-deployment
+  labels:
+    app: proxy
+  # namespace: coffeeshop-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: proxy
+  template:
+    metadata:
+      labels:
+        app: proxy
+    spec:
+      containers:
+        - name: proxy-service
+          image: 906314669216.dkr.ecr.us-east-1.amazonaws.com/go-coffeeshop-proxy:latest # Your ECR image
+          ports:
+            - containerPort: 5000 # Proxy service port
+              name: grpc
+          env:
+            - name: APP_NAME
+              value: "ProxyService-Prod-K8s"
+            - name: GRPC_PRODUCT_HOST
+              value: "product-service" # K8s service name for Product
+            - name: GRPC_PRODUCT_PORT
+              value: "5001"
+            - name: GRPC_COUNTER_HOST
+              value: "counter-service" # K8s service name for Counter
+            - name: GRPC_COUNTER_PORT
+              value: "5002"
+
+          livenessProbe:
+            tcpSocket:
+              port: grpc # Port 5000
+            initialDelaySeconds: 45 # Give it time to start and connect to product/counter
+            periodSeconds: 20
+            timeoutSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: grpc # Port 5000
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 5

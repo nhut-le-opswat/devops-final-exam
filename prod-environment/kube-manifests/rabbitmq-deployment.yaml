@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  labels:
+    app: rabbitmq
+  # You can add a namespace here if you plan to use one, e.g., namespace: coffeeshop-prod
+spec:
+  replicas: 1 # For the exam, 1 replica is fine for simplicity
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3.11-management-alpine # Official image
+          ports:
+            - containerPort: 5672 # AMQP port
+              name: amqp
+            - containerPort: 15672 # Management UI port
+              name: http-mgmt
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials # Name of the Secret we created
+                  key: RABBITMQ_DEFAULT_USER # Key within that Secret
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: RABBITMQ_DEFAULT_PASS
+          # Liveness and Readiness Probes for RabbitMQ
+          livenessProbe:
+            exec:
+              command:
+                - rabbitmq-diagnostics
+                - status
+            initialDelaySeconds: 120 # Give it ample time to start, especially first pull
+            periodSeconds: 30
+            timeoutSeconds: 15
+          readinessProbe:
+            exec:
+              command:
+                - rabbitmq-diagnostics
+                - ping
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+          # For a more robust setup, consider volume mounts for data persistence
+          # For the exam, ephemeral storage for RabbitMQ might be acceptable if not specified otherwise.
+          # If persistence is needed:
+          # volumeMounts:
+          # - name: rabbitmq-data
+          #   mountPath: /var/lib/rabbitmq
+      # volumes:
+      # - name: rabbitmq-data
+      #   persistentVolumeClaim:
+      #     claimName: rabbitmq-pvc # You would need to define a PVC

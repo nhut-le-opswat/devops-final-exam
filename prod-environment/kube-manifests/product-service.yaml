@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service # This will be the DNS name for other services to connect
+  labels:
+    app: product
+  # namespace: coffeeshop-prod # If using a namespace
+spec:
+  type: ClusterIP # Only reachable within the cluster
+  ports:
+    - name: grpc
+      port: 5001 # Port the service listens on
+      targetPort: grpc # Port on the product pods (references containerPort name 'grpc' from Deployment)
+  selector:
+    app: product # Selects pods with label "app: product" (from our Deployment)

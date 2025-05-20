@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: counter-service
+  labels:
+    app: counter
+  # namespace: coffeeshop-prod
+spec:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 5002
+      targetPort: grpc # Port 5002 on the pod
+  selector:
+    app: counter

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy-service
+  labels:
+    app: proxy
+  # namespace: coffeeshop-prod
+spec:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 5000 # Port the service listens on
+      targetPort: grpc # Port 5000 on the proxy pods
+  selector:
+    app: proxy

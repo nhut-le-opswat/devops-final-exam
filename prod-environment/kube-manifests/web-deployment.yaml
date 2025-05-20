@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  labels:
+    app: web
+  # namespace: coffeeshop-prod
+spec:
+  replicas: 1 # Start with 1, can be scaled later with HPA
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web-app
+          image: 906314669216.dkr.ecr.us-east-1.amazonaws.com/go-coffeeshop-web:latest # Your ECR image
+          ports:
+            - containerPort: 8888 # Web app listens on 8888
+              name: http
+          env:
+            - name: REVERSE_PROXY_URL
+              value: "proxy-service:5000" # K8s service name and port for Proxy
+            - name: WEB_PORT
+              value: "8888" # Port the app inside the container should listen on
+          # The exam doc implies WEB_PORT is an env var for the app itself.
+          # It's also the containerPort.
+
+          livenessProbe:
+            httpGet: # Assuming it's an HTTP server
+              path: / # Check the root path, or a specific /healthz endpoint if it has one
+              port: http # Port 8888
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 2
