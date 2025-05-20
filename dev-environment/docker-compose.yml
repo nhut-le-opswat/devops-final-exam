@@ -14,6 +14,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD", "pg_isready"]
     ports:
       - "5432:5432"
     restart: unless-stopped
@@ -28,6 +30,11 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -42,9 +49,9 @@ services:
       - coffeeshop-net
     environment:
       APP_NAME: ProductService
+    ports:
+      - 5001:5001
     restart: unless-stopped
-    depends_on:
-      - postgres
 
   counter:
     image: cuongopswat/go-coffeeshop-counter
@@ -58,11 +65,14 @@ services:
       PG_DSN_URL: "host=postgres_db user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable"
       RABBITMQ_URL: "amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq_broker:5672/"
       PRODUCT_CLIENT_URL: "product_service:5001"
+    ports:
+      - 5002:5002
     restart: unless-stopped
     depends_on:
-      - postgres
-      - rabbitmq
-      - product
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   barista:
     image: cuongopswat/go-coffeeshop-barista
@@ -77,8 +87,10 @@ services:
       RABBITMQ_URL: "amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq_broker:5672/"
     restart: unless-stopped
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   kitchen:
     image: cuongopswat/go-coffeeshop-kitchen
@@ -93,8 +105,10 @@ services:
       RABBITMQ_URL: "amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq_broker:5672/"
     restart: unless-stopped
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   proxy:
     image: cuongopswat/go-coffeeshop-proxy
@@ -107,6 +121,8 @@ services:
       GRPC_PRODUCT_PORT: 5001
       GRPC_COUNTER_HOST: counter_service
       GRPC_COUNTER_PORT: 5002
+    ports:
+      - 5000:5000
     restart: unless-stopped
     depends_on:
       - product
@@ -117,16 +133,14 @@ services:
     container_name: web_app
     networks:
       - coffeeshop-net
-    ports:
-      - "80:8888"
     environment:
       REVERSE_PROXY_URL: "proxy_service:5000"
       WEB_PORT: 8888
+    ports:
+      - "8888:8888"
     restart: unless-stopped
     depends_on:
       - proxy
-      - barista
-      - kitchen
 
 volumes:
   postgres_data:
