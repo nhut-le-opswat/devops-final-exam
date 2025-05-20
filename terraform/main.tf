@@ -385,8 +385,8 @@ locals {
 }
 
 resource "aws_ecr_repository" "app_ecr_repos" {
-  count = terraform.workspace == "prod" ? length(local.app_image_names) : 0
-
+  count                = terraform.workspace == "prod" ? length(local.app_image_names) : 0
+  force_delete         = true
   name                 = local.app_image_names[count.index]
   image_tag_mutability = "MUTABLE"
 
