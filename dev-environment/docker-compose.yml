@@ -61,7 +61,7 @@ services:
     environment:
       APP_NAME: CounterService
       IN_DOCKER: "true"
-      PG_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}?sslmode=disable"
+      PG_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}"
       PG_DSN_URL: "host=postgres_db user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable"
       RABBITMQ_URL: "amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq_broker:5672/"
       PRODUCT_CLIENT_URL: "product_service:5001"
@@ -82,7 +82,7 @@ services:
     environment:
       APP_NAME: BaristaService
       IN_DOCKER: "true"
-      PG_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}?sslmode=disable"
+      PG_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}"
       PG_DSN_URL: "host=postgres_db user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable"
       RABBITMQ_URL: "amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq_broker:5672/"
     restart: unless-stopped
@@ -100,7 +100,7 @@ services:
     environment:
       APP_NAME: KitchenService
       IN_DOCKER: "true"
-      PG_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}?sslmode=disable"
+      PG_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_db:5432/${POSTGRES_DB}"
       PG_DSN_URL: "host=postgres_db user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable"
       RABBITMQ_URL: "amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq_broker:5672/"
     restart: unless-stopped
@@ -137,7 +137,7 @@ services:
       REVERSE_PROXY_URL: "proxy_service:5000"
       WEB_PORT: 8888
     ports:
-      - "8888:8888"
+      - "80:8888"
     restart: unless-stopped
     depends_on:
       - proxy
