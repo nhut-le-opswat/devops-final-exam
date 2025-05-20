@@ -193,9 +193,9 @@ Located in `.github/workflows/`.
 ## 4. The Homepage of the Application
 
 *   **Development Environment URL:** `http://[DEV_EC2_PUBLIC_IP_YOU_USED]`
-    *   [SCREENSHOT_OF_DEV_APP_HOMEPAGE_HERE]
+    *   ![Development App Homepage](images/dev_app_homepage.png)
 *   **Production Environment URL:** `http://[PROD_NLB_DNS_NAME_FROM_OUTPUT]` (e.g., `http://a5a9dc2a15b7d45738a8c27b5563211c-1589612650.us-east-1.elb.amazonaws.com`)
-    *   [SCREENSHOT_OF_PROD_APP_HOMEPAGE_HERE]
+    *   ![Production App Homepage](images/prod_app_homepage.png)
 
 ## 5. User Guideline
 
@@ -208,7 +208,7 @@ Located in `.github/workflows/`.
 *   (Optional) Docker Desktop or Docker Engine if building/running images locally or for initial ECR push.
 
 ### 5.2 Repository Setup
-1.  Clone the repository: `git clone [YOUR_GIT_REPO_URL]`
+1.  Clone the repository: `git clone https://github.com/nhut-le-opswat/devops-final-exam.git`
 2.  Navigate to the repository root: `cd devops-final-exam`
 
 ### 5.3 Terraform Infrastructure Provisioning
@@ -236,7 +236,7 @@ All Terraform commands should be run from the `devops-final-exam/terraform/` dir
 1.  Ensure `dev` workspace infrastructure is applied via Terraform. Note the public IP of the `dev-app-server` EC2 instance.
 2.  SSH into the Dev EC2 instance:
     ```bash
-    ssh -i /path/to/your/nhutle-ec2-key-pair.pem ec2-user@[DEV_EC2_PUBLIC_IP]
+    ssh -i /path/to/your/[YOUR_KEY_PAIR].pem ec2-user@[DEV_EC2_PUBLIC_IP]
     ```
 3.  On the EC2 instance, prepare the application directory and files:
     ```bash
